@@ -1,0 +1,279 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@model DataAccess.Entities.Todo
+<h1>Tạo Người Dùng</h1>
+<form asp-controller="Home" method="post" id="userDetailForm">
+    <div class="form-group">
+        <label for="user">Tiêu đề</label>
+        <input type="text" class="form-control" id="user"/>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="AddNewUser()">Tạo Người Dùng</button>
+</form>
+<h1>Danh Sách Người Dùng</h1>
+
+<table id="usersTable" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>FullName</th>
+
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <th>ID</th>
+            <th>FullName</th>
+        </tr>
+    </tfoot>
+    <tbody></tbody>
+</table>
+
+<h1>Tạo Công việc</h1>
+
+<form asp-controller="Home" method="post" id="toDoDetailForm">
+    <input type="hidden" class="form-control" id="id" value="@Model?.ID" />
+    <div class="form-group">
+        <label for="username">Người dùng</label>
+        <select class="form-control" id="username" value="UserId" asp-items="ViewBag.SearchByUser">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="title">Tiêu đề</label>
+        <input type="text" class="form-control" id="title" value="@Model?.Title" />
+    </div>
+    <div class="form-group">
+        <label for="content">Nội dung</label>
+        <textarea class="form-control" id="content" value="@Model?.Content"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="shortDesc">Mô tả ngắn</label>
+        <input type="text" class="form-control" id="shortDesc" value="@Model?.ShortDesc" />
+    </div>
+    <div class="form-group">
+        <label class="control-label mb-10 text-left">Ngày hẹn</label>
+        <input type="text" class="form-control" id="appointmentDate" value="@Model?.AppointmentDate" />
+    </div>
+    <div class="form-group">
+        <label for="status">Trạng thái</label>
+        <select class="form-control" id="status" value="@Model?.Status"
+                asp-items="Html.GetEnumSelectList<DataAccess.Entities.Status>()">
+        </select>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="AddToTo()">Tạo Công Việc</button>
+    <button type="button" class="btn btn-success" onclick="EditToTo()">Chỉnh Sửa</button>
+</form>
+
+<h1>Danh Sách Công Việc</h1>
+<table id="toDosTable" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Title</th>
+            <td>Content</td>
+            <td>ShortDesc</td>
+            <td>AppointmentDate</td>
+            <td>Status</td>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Title</th>
+            <td>Content</td>
+            <td>ShortDesc</td>
+            <td>AppointmentDate</td>
+            <td>Status</td>
+            <th>Action</th>
+        </tr>
+    </tfoot>
+    <tbody></tbody>
+</table>
+
+<script>
+$(document).ready(function () {
+    flatpickr(document.getElementById('appointmentDate'), {
+            defaultDate: 'today',
+            dateFormat: "m/d/Y",
+
+    });
+        console.log("start: " + $("#appointmentDate").val())
+    $("#appointmentDate").change(function () {
+            console.log("change: " + $("#appointmentDate").val())
+    });
+    $('#usersTable').DataTable({
+            ajax: {
+                url: "/Home/GetAllUser",
+                dataSrc: "",
+                type: "GET",
+                datatype: "json",
+                data: function (data) {
+                },
+            },
+            columns: [
+                { data: "id", name: "id", autoWidth: true },
+                { data: "fullName", name: "fullName", autoWidth: true },
+            ],
+    });
+    $('#toDosTable').DataTable({
+        ajax: {
+            url: "/Home/GetAllToDo",
+            dataSrc: "",
+            type: "GET",
+            datatype: "json",
+            data: function (data) {
+            },
+        },
+        columnDefs: [
+                {
+                    'targets': [5],
+                    'render': function (e) {
+                        if (e == "2001-01-01T00:00:00" || e == "0001-01-01T00:00:00") return "";
+                        else return moment(e).format("MM/DD/YYYY");
+                    },
+                },
+                {
+                    targets: [6],
+                    render: function (e, t, r, n) {
+                        return (
+                            0 === e
+                                ? (out ='<span>Chưa start</span>')
+                                : 1 === e
+                                    ? (out ='<span>Đang làm</span>')
+                                    : 2 === e
+                                        ? (out ='<span>Đã xong</span>')
+                                        : 3 === e &&
+                                        (out ='<span>Đã hủy</span>'),
+                            out
+                        );
+                    },
+                },
+        ],
+        columns: [
+                { data: "id", name: "id", autoWidth: true },
+                { data: "userName.fullName", name: "userName.fullName", autoWidth: true },
+                { data: "title", name: "title", autoWidth: true },
+                { data: "content", name: "content", autoWidth: true },
+                { data: "shortDesc", name: "shortDesc", autoWidth: true },
+                { data: "appointmentDate", name: "appointmentDate", autoWidth: true },
+                { data: "status", name: "status", autoWidth: true },
+            {
+                render: function (data, type, row, meta) {
+                    return (
+                            '<button type="button" class="btn btn-primary" onclick="return GetToDoById(' +
+                        row.id + ')">Xem</button>'+
+                            '<button type="button" class="btn btn-info" onclick="return DeleteTodo(' +
+                            row.id + ')">Huỷ</button>'
+                    );
+                    
+                },
+            },
+        ],
+    });
+});
+    function GetToDoById(id) {
+        return $.ajax({
+            url: "/Home/GetToDoById/" + id,
+            type: "GET",
+            success: function (e) {
+                $('#id').val(e.id),
+                $('#username').val(e.userId),
+                $('#title').val(e.title),
+                $('#content').val(e.content),
+                $('#shortDesc').val(e.shortDesc),
+                $('#appointmentDate').val(moment(e.appointmentDate).format("YYYY-MM-DD")),
+                $('#status').val(e.status)
+            },
+            error: function (e) {
+                swal("Error", e.responseText, "error")
+            }
+        }), !1
+    }
+    function DeleteTodo(id) {
+        return $.ajax({
+            url: "/Home/DeleteTodo/" + id,
+            type: "DELETE",
+            success: function (e) {
+                alert(e.msg)
+                location.reload()
+            },
+            error: function (e) {
+                swal("Error", e.responseText, "error")
+            }
+        }), !1
+    }
+    function EditToTo() {
+        var id = $('#id').val();
+        var userId = $('#username').val();
+        var title = $('#title').val();
+        var content = $('#content').val();
+        var shortDesc = $('#shortDesc').val();
+        var appointmentDate = moment($('#appointmentDate').val()).format("YYYY-MM-DD");
+        var statusmodel = parseInt($('#status').val(), 10);
+        model = {
+            ID: id, UserId: userId, Title: title, Content: content, ShortDesc: shortDesc, Status: statusmodel,AppointmentDate: appointmentDate
+        }
+        return $.ajax({
+            url: "/Home/UpdateTodo/" + id,
+            type: "POST",
+            data: JSON.stringify(model),
+            contentType: "application/json; charset=utf-8",
+            success: function (e) {
+                alert(e.msg)
+                location.reload()
+            },
+            error: function (e) {
+                swal("Error", e.responseText, "error")
+            }
+        }), !1
+    }
+    function AddToTo() {
+        var userId = $('#username').val();
+        var title = $('#title').val();
+        var content = $('#content').val();
+        var shortDesc = $('#shortDesc').val();
+        var appointmentDate = moment($('#appointmentDate').val()).format("YYYY-MM-DD");
+        var statusmodel = parseInt($('#status').val(), 10);
+        model = {
+            UserId: userId, Title: title, Content: content, ShortDesc: shortDesc, Status: statusmodel, AppointmentDate: appointmentDate
+        }
+        console.log("model: " + model)
+        return $.ajax({
+            url: "/Home/InsertToDo/",
+            type: "POST",
+            data: JSON.stringify(model),
+            contentType: "application/json; charset=utf-8",
+            success: function (e) {
+                location.reload()
+            },
+            error: function (e) {
+                swal("Error", e.responseText, "error")
+            }
+        }), !1
+    }
+    function AddNewUser() {
+        var user = $('#user').val();
+        model = {
+            FullName: user
+        }
+        return $.ajax({
+            url: "/Home/InsertUser/",
+            type: "POST",
+            data: JSON.stringify(model),
+            contentType: "application/json; charset=utf-8",
+            success: function (e) {
+                // alert(e.msg)
+                location.reload()
+            },
+            error: function (e) {
+                swal("Error", e.responseText, "error")
+            }
+        }), !1
+    }
+</script>
+
+
