@@ -21,7 +21,7 @@ namespace ToDo.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var users = await _userRepo.GetAllUser(HttpContext.RequestAborted);
+            var users = await _userRepo.GetAllUserAsync(HttpContext.RequestAborted);
             var selectListItems = new SelectList(users, "ID","FullName");
             ViewData["SearchByUser"] = selectListItems;
             return View();
@@ -126,8 +126,8 @@ namespace ToDo.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var newUserId = await _userRepo.AddUser(model, HttpContext.RequestAborted);
-                    var users = await _userRepo.GetUser(newUserId, HttpContext.RequestAborted);
+                    var newUserId = await _userRepo.AddUserAsync(model, HttpContext.RequestAborted);
+                    var users = await _userRepo.GetUserAsync(newUserId, HttpContext.RequestAborted);
                     return users == null ? NotFound() : RedirectToAction("index");
                 }
                 return BadRequest();
@@ -145,7 +145,7 @@ namespace ToDo.Controllers
         {
             try
             {
-                var users = await _userRepo.GetAllUser(HttpContext.RequestAborted);
+                var users = await _userRepo.GetAllUserAsync(HttpContext.RequestAborted);
 
                 return Json(users);
             }

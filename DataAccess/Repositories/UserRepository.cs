@@ -13,7 +13,7 @@ namespace DataAccess.Repositories
         {
             _dbContext = dbContext;
         }
-        public async Task<int> AddUser(User model, CancellationToken cancellation)
+        public async Task<int> AddUserAsync(User model, CancellationToken cancellation)
         {
             try
             {
@@ -27,16 +27,16 @@ namespace DataAccess.Repositories
                 throw;
             }
         }
-        public Task DeleteUser(int id, CancellationToken cancellation)
+        public Task DeleteUserAsync(int id, CancellationToken cancellation)
         {
             throw new NotImplementedException();
         }
-        public async Task<List<User>> GetAllUser(CancellationToken cancellation)
+        public async Task<List<User>> GetAllUserAsync(CancellationToken cancellation)
         {
             var todos = await _dbContext.Users!.ToListAsync(cancellation);
             return todos;
         }
-        public async Task<User> GetUser(int id, CancellationToken cancellation)
+        public async Task<User> GetUserAsync(int id, CancellationToken cancellation)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace DataAccess.Repositories
                 throw;
             }
         }
-        public Task UpdateUser(int id, User model, CancellationToken cancellation)
+        public Task UpdateUserAsync(int id, User model, CancellationToken cancellation)
         {
             throw new NotImplementedException();
         }
