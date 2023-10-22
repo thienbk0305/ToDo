@@ -1,12 +1,8 @@
-﻿using DataAccess.DBContext;
+﻿using Microsoft.EntityFrameworkCore;
+
+using DataAccess.DBContext;
 using DataAccess.Entities;
 using DataAccess.IRepositories;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Repositories
 {
@@ -17,12 +13,12 @@ namespace DataAccess.Repositories
         {
             _dbContext = dbContext;
         }
-        public async Task<int> AddUser(User model)
+        public async Task<int> AddUser(User model, CancellationToken cancellation)
         {
             try
             {
-                _dbContext.Users!.Add(model);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.Users!.AddAsync(model, cancellation);
+                await _dbContext.SaveChangesAsync(cancellation);
                 return model.ID;
             }
             catch (Exception)
@@ -31,20 +27,20 @@ namespace DataAccess.Repositories
                 throw;
             }
         }
-        public Task DeleteUser(int id)
+        public Task DeleteUser(int id, CancellationToken cancellation)
         {
             throw new NotImplementedException();
         }
-        public async Task<List<User>> GetAllUser()
+        public async Task<List<User>> GetAllUser(CancellationToken cancellation)
         {
-            var todos = await _dbContext.Users!.ToListAsync();
+            var todos = await _dbContext.Users!.ToListAsync(cancellation);
             return todos;
         }
-        public async Task<User> GetUser(int id)
+        public async Task<User> GetUser(int id, CancellationToken cancellation)
         {
             try
             {
-                var users = await _dbContext.Users!.FindAsync(id);
+                var users = await _dbContext.Users!.FindAsync(id, cancellation);
                 return users!;
             }
             catch (Exception)
@@ -53,7 +49,7 @@ namespace DataAccess.Repositories
                 throw;
             }
         }
-        public Task UpdateUser(int id, User model)
+        public Task UpdateUser(int id, User model, CancellationToken cancellation)
         {
             throw new NotImplementedException();
         }
