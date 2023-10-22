@@ -1,27 +1,21 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using DataAccess.Entities;
-using DataAccess.DBContext;
-using DataAccess.UnitOfWork;
-using DataAccess.Repositories;
-using DataAccess.IRepositories;
-using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Diagnostics;
+
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Linq;
+
+using DataAccess.Entities;
+using DataAccess.IRepositories;
 using ToDo.Models;
 
 namespace ToDo.Controllers
 {
     public class HomeController : Controller
     {
-        private ToDoDBContext _dbContext;
         private readonly IToDoRepositoty _toDoRepo;
         private readonly IUserRepository _userRepo;
 
-        public HomeController(ToDoDBContext dbContext, IToDoRepositoty toDoRepositoty, IUserRepository  userRepository)
+        public HomeController(IToDoRepositoty toDoRepositoty, IUserRepository  userRepository)
         {
-            _dbContext = dbContext;
             _toDoRepo  = toDoRepositoty; 
             _userRepo = userRepository;
         }
@@ -49,7 +43,7 @@ namespace ToDo.Controllers
         {
             try
             {
-                var todos = await _toDoRepo.GetAllTodo();
+                var todos = await _toDoRepo.GetAllTodoAsync(HttpContext.RequestAborted);
               
                 return Json(todos);
             }
@@ -66,8 +60,8 @@ namespace ToDo.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var newToDoId = await _toDoRepo.AddTodo(model);
-                    var todos = await _toDoRepo.GetTodo(newToDoId);
+                    var newToDoId = await _toDoRepo.AddTodoAsync(model, HttpContext.RequestAborted);
+                    var todos = await _toDoRepo.GetTodoAsync(newToDoId, HttpContext.RequestAborted);
                     return todos == null ? NotFound() : RedirectToAction("index");
                 }
                 return BadRequest();
@@ -83,7 +77,7 @@ namespace ToDo.Controllers
         [HttpGet]
         public async Task<ActionResult<Todo>> GetToDoById(int id)
         {
-            var todo = await _toDoRepo.GetTodoById(id);
+            var todo = await _toDoRepo.GetTodoByIdAsync(id, HttpContext.RequestAborted);
 
             if (todo == null)
             {
@@ -98,7 +92,7 @@ namespace ToDo.Controllers
         {
             try
             {
-                await _toDoRepo.DeleteTodo(id);
+                await _toDoRepo.DeleteTodoAsync(id, HttpContext.RequestAborted);
                 return Json(new { code = 1, msg = "Huỷ thành công" });
             }
             catch (Exception ex)
@@ -114,7 +108,7 @@ namespace ToDo.Controllers
         {
             try
             {
-                await _toDoRepo.UpdateTodo(id, model);
+                await _toDoRepo.UpdateTodoAsync(id, model, HttpContext.RequestAborted);
                 return Json(new { code = 1, msg = "Cập nhật thành công" });
             }
             catch (Exception ex)
