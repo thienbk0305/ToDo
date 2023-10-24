@@ -1,19 +1,12 @@
 ﻿using DataAccess.DBContext;
 using DataAccess.Entities;
 using DataAccess.IRepositories;
+
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace DataAccess.Repositories
 {
-   
+
     public class ToDoRepository : IToDoRepositoty
     {
         private ToDoDBContext _dbContext;
@@ -22,12 +15,12 @@ namespace DataAccess.Repositories
             _dbContext = dbContext;
         }
         //Adnew ToDo
-        public async Task<int> AddTodo(Todo model)
+        public async Task<int> AddTodoAsync(Todo model, CancellationToken cancellation)
         {
             try
             {
-                _dbContext.Todos!.Add(model);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.Todos!.AddAsync(model, cancellation);
+                await _dbContext.SaveChangesAsync(cancellation);
                 return model.ID;
             }
             catch (Exception)
@@ -37,15 +30,15 @@ namespace DataAccess.Repositories
             }
         }
         //Delete ToDo
-        public async Task DeleteTodo(int id)
+        public async Task DeleteTodoAsync(int id, CancellationToken cancellation)
         {
             try
             {
-                var deleteTodo = _dbContext.Todos!.SingleOrDefault(t => t.ID == id);
+                var deleteTodo = await _dbContext.Todos!.SingleOrDefaultAsync(t => t.ID == id, cancellation);
                 if (deleteTodo != null)
                 {
                     _dbContext.Todos!.Remove(deleteTodo);
-                    await _dbContext.SaveChangesAsync();
+                    await _dbContext.SaveChangesAsync(cancellation);
                 }
             }
             catch (Exception)
@@ -56,13 +49,13 @@ namespace DataAccess.Repositories
 
         }
         //Show All ToDo
-        public async Task<List<Todo>> GetAllTodo()
+        public async Task<List<Todo>> GetAllTodoAsync(CancellationToken cancellation)
         {
             //var todos = await _dbContext.Todos!.ToListAsync();
             var todos = from t in _dbContext.Todos
                         join u in _dbContext.Users! on t.UserId equals u.ID
                         orderby u.ID
-                        select new DataAccess.Entities.Todo
+                        select new Todo
                         {
                             ID = t.ID,
                             UserId = t.UserId,
@@ -73,15 +66,15 @@ namespace DataAccess.Repositories
                             AppointmentDate = t.AppointmentDate,
                             Status = t.Status,
                         };
-            var result = await todos.ToListAsync();
+            var result = await todos.ToListAsync(cancellation);
             return result;
         }
         //Show ToDo By Id
-        public async Task<Todo> GetTodo(int id)
+        public async Task<Todo> GetTodoAsync(int id, CancellationToken cancellation)
         {
             try
             {
-                var todos = await _dbContext.Todos!.FindAsync(id);
+                var todos = await _dbContext.Todos!.FindAsync(id, cancellation);
                 return todos!;
             }
             catch (Exception)
@@ -92,11 +85,11 @@ namespace DataAccess.Repositories
 
         }
         //Show ToDo
-        public async Task<Todo> GetTodoById(int id)
+        public async Task<Todo> GetTodoByIdAsync(int id, CancellationToken cancellation)
         {
             try
             {
-                var todos = await _dbContext.Todos!.AsNoTracking().Include(c => c.UserName).FirstOrDefaultAsync(c => c.ID==id);
+                var todos = await _dbContext.Todos!.AsNoTracking().Include(c => c.UserName).FirstOrDefaultAsync(c => c.ID==id, cancellation);
                 return todos!;
             }
             catch (Exception)
@@ -107,14 +100,14 @@ namespace DataAccess.Repositories
 
         }
         //Update ToDo
-        public async Task UpdateTodo(int id, Todo model)
+        public async Task UpdateTodoAsync(int id, Todo model, CancellationToken cancellation)
         {
             try
             {
                 if (id == model.ID)
                 {
                     _dbContext.Todos!.Update(model);
-                    await _dbContext.SaveChangesAsync();
+                    await _dbContext.SaveChangesAsync(cancellation);
                 }
             }
             catch (Exception)
